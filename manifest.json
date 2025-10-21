@@ -1,0 +1,9 @@
+{
+    "name": "Lorebook Generator from chat",
+    "version": "1.0.0",
+    "description": "Создает лорбуки из файлов чата с контекстным разделением на диалоги.",
+    "author": "fantomas",
+    "main": "index.html",
+    "icon": "fa-solid fa-book-medical",
+    "api_version": "1.10.0"
+}
