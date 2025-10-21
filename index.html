@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Lorebook Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --nightwing-dark-blue: #0d1b2a;
+            --nightwing-mid-blue: #1b263b;
+            --nightwing-light-blue: #415a77;
+            --nightwing-neon-blue: #00a8f3;
+            --nightwing-text: #e0e1dd;
+        }
+
+        /* Анимация для пульсации заголовка */
+        @keyframes pulse {
+            0% {
+                text-shadow: 0 0 5px var(--nightwing-neon-blue), 0 0 10px var(--nightwing-neon-blue);
+            }
+            50% {
+                text-shadow: 0 0 10px var(--nightwing-neon-blue), 0 0 20px var(--nightwing-neon-blue);
+            }
+            100% {
+                text-shadow: 0 0 5px var(--nightwing-neon-blue), 0 0 10px var(--nightwing-neon-blue);
+            }
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background-color: var(--nightwing-dark-blue);
+            color: var(--nightwing-text);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background-color: var(--nightwing-mid-blue);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--nightwing-light-blue);
+            box-shadow: 0 0 25px rgba(0, 168, 243, 0.2);
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--nightwing-neon-blue);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+            /* Применяем анимацию */
+            animation: pulse 4s infinite ease-in-out;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 400;
+            /* Делаем надписи ярче */
+            color: var(--nightwing-text);
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--nightwing-light-blue);
+            background-color: var(--nightwing-dark-blue);
+            color: var(--nightwing-text);
+            box-sizing: border-box;
+            font-size: 1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--nightwing-neon-blue);
+            box-shadow: 0 0 10px rgba(0, 168, 243, 0.5);
+        }
+
+        .range-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .range-group .form-group {
+            flex: 1;
+        }
+
+        /* Стиль для стеклянной неоновой кнопки */
+        button {
+            width: 100%;
+            padding: 15px;
+            /* Полупрозрачный фон для эффекта стекла */
+            background: rgba(65, 90, 119, 0.25);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px); /* Для поддержки Safari */
+            color: #ffffff;
+            border: 1px solid var(--nightwing-neon-blue);
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            font-family: 'Exo 2', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 168, 243, 0.4);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            background: rgba(65, 90, 119, 0.5);
+            box-shadow: 0 0 25px rgba(0, 168, 243, 0.7);
+        }
+
+        #log-output {
+            margin-top: 25px;
+            background-color: var(--nightwing-dark-blue);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            min-height: 50px;
+            border: 1px solid var(--nightwing-light-blue);
+            color: var(--nightwing-light-blue);
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Lorebook Generator</h2>
+
+        <div class="form-group">
+            <label for="chat-file">Выберите чат:</label>
+            <select id="chat-file"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="lorebook-name">Название нового лорбука:</label>
+            <input type="text" id="lorebook-name" placeholder="Например, Nightwing_Memory_Pt1">
+        </div>
+
+        <div class="range-group">
+            <div class="form-group">
+                <label for="start-index">Начать с №:</label>
+                <input type="number" id="start-index" value="0" min="0">
+            </div>
+            <div class="form-group">
+                <label for="end-index">Закончить на № (0 = до конца):</label>
+                <input type="number" id="end-index" value="0" min="0">
+            </div>
+        </div>
+
+        <button id="generate-button">Создать Лорбук</button>
+
+        <div id="log-output">
+            Ожидание команды...
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+
+

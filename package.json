@@ -1,0 +1,10 @@
+{
+  "name": "lorebook-generator",
+  "displayName": "Lorebook Generator",
+  "version": "1.0.0",
+  "description": "Создает лорбуки из логов чата прямо в интерфейсе SillyTavern.",
+  "author": "fantomas",
+  "id": "lorebook-generator",
+  "type": "extension-tab",
+  "icon": "fa-solid fa-book-medical"
+}
