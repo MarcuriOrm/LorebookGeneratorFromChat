@@ -4,6 +4,6 @@
     "description": "Создает лорбуки из файлов чата с контекстным разделением на диалоги.",
     "author": "fantomas",
     "main": "index.html",
-    "icon": "fa-solid fa-book-medical",
+    "icon": "fa-book",
     "api_version": "1.10.0"
 }
