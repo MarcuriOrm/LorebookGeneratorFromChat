@@ -3,7 +3,6 @@
     "version": "1.0.0",
     "description": "Создает лорбуки из файлов чата с контекстным разделением на диалоги.",
     "author": "fantomas",
-    "main": "index.html",
-    "icon": "fa-book",
+    "main": "loader.js",
     "api_version": "1.10.0"
 }
