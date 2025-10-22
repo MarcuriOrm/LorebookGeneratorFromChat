@@ -125,11 +125,9 @@ jQuery(async () => {
             createBtn.prop('disabled', true);
             
             try {
-                const userInfo = { user_name: context.user_name };
-                const messages = context.chat;
-                const chatContent = JSON.stringify(userInfo) + '\n' + messages.map(msg => JSON.stringify(msg)).join('\n');
-
-                const lorebookJson = generateLorebook(chatContent, start, end);
+                // ВАЖНО: Мы больше не передаем chatContent в generateLorebook,
+                // так как вся необходимая информация уже есть в 'context'.
+                const lorebookJson = generateLorebook(context.chat, start, end, context.user_name);
                 const lorebookFileContent = JSON.stringify(lorebookJson, null, 4);
 
                 await downloadFile(lorebookFileContent, `${lorebookName}.json`, 'application/json');
@@ -146,15 +144,27 @@ jQuery(async () => {
         });
     }
 
-    // --- ИСПРАВЛЕННАЯ ЛОГИКА ---
-    function generateLorebook(chatContent, start, end) {
+    // --- ФИНАЛЬНАЯ ИСПРАВЛЕННАЯ ЛОГИКА ---
+    function generateLorebook(messages, start, end, contextUserName) {
         try {
-            if (!chatContent || typeof chatContent !== 'string') {
-                 throw new Error("Содержимое чата пустое или имеет неверный формат.");
+            if (!messages || messages.length === 0) {
+                 throw new Error("История чата пуста.");
             }
-            const lines = chatContent.trim().split('\n').map(line => JSON.parse(line));
-            const messages = lines.slice(1);
-            const userName = lines[0].user_name;
+
+            // --- НАДЕЖНОЕ ОПРЕДЕЛЕНИЕ ИМЕНИ ПОЛЬЗОВАТЕЛЯ ---
+            let userName = contextUserName; // Пробуем сначала из контекста
+            if (!userName) {
+                // Если в контексте нет, ищем в сообщениях
+                const userMessage = messages.find(msg => msg.is_user);
+                if (userMessage) {
+                    userName = userMessage.name;
+                }
+            }
+            if (!userName) {
+                throw new Error("Не удалось найти имя пользователя в чате.");
+            }
+            // --- КОНЕЦ ОПРЕДЕЛЕНИЯ ИМЕНИ ---
+
             const entries = {};
             let entryCounter = 0;
             let currentChunk = [];
@@ -166,12 +176,10 @@ jQuery(async () => {
                 const msg = messages[i];
                 if (!msg || !msg.name || !msg.mes) continue;
 
-                // Временно добавляем оригинальный индекс, чтобы использовать его в createLorebookEntry
                 const msgWithId = { ...msg, original_id: i };
                 currentChunk.push(msgWithId);
 
-                // Используем .trim() для надежного сравнения имен.
-                // Создаем запись, когда встречаем сообщение пользователя или доходим до конца.
+                // Используем .trim() для надежного сравнения имен
                 if (msg.name.trim() === userName.trim() || i === safeLoopEnd - 1) {
                     if (currentChunk.length > 0) {
                         entryCounter++;
@@ -195,7 +203,7 @@ jQuery(async () => {
             };
         } catch (e) {
             console.error("Lorebook Generator: Ошибка парсинга чата или генерации лорбука", e);
-            throw new Error("Файл чата поврежден или имеет неверный формат.");
+            throw new Error(`Ошибка обработки чата: ${e.message}`);
         }
     }
 
@@ -206,13 +214,11 @@ jQuery(async () => {
         const firstMsg = chunk[0];
         const lastMsg = chunk[chunk.length - 1];
         
-        // Используем сохраненный original_id для правильной нумерации
         const firstMsgNumber = firstMsg.original_id;
         const lastMsgNumber = lastMsg.original_id;
 
         const content = chunk.map(msg => `${msg.name}: ${msg.mes}`).join('\n\n');
         
-        // Добавляем +1 для человекочитаемого формата (нумерация с 1, а не 0)
         const comment = (firstMsgNumber === lastMsgNumber)
             ? `Диалог. Сообщение #${firstMsgNumber + 1}`
             : `Диалог. Сообщения #${firstMsgNumber + 1}-${lastMsgNumber + 1}`;
@@ -256,3 +262,4 @@ jQuery(async () => {
         subtree: true,
     });
 });
+
