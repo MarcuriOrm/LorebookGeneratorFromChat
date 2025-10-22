@@ -1,9 +1,9 @@
-// Lorebook Generator v1.0.0
+// Lorebook Generator v1.0.0 
 
+jQuery(async () => {
+    // This function ensures our code only runs when the page is fully ready.
 
-(function () {
-    // --- ВСЯ ЛОГИКА ЗДЕСЬ ---
-    // (HTML-шаблон, функции showGeneratorModal, initializeModalLogic, и т.д.)
+    // --- HTML-шаблон для нашего модального окна ---
     const modalHtmlContent = `
     <style>
         :root {
@@ -51,12 +51,16 @@
         </div>
     </div>`;
 
+    // --- Функции для работы расширения ---
+
     function showGeneratorModal() {
         const modalId = 'lorebook-generator-modal';
+        // Удаляем старое модальное окно, если оно есть, для чистоты
         $('#' + modalId).remove();
         const modal = $(`<div class="modal fade" id="${modalId}" tabindex="-1" role="dialog"><div class="modal-dialog modal-lg" role="document"><div class="modal-content" style="background: transparent; border: none;">${modalHtmlContent}</div></div></div>`);
         $('body').append(modal);
         $('#' + modalId).modal('show');
+        // Инициализируем логику только после того, как модальное окно полностью отобразится
         $('#' + modalId).on('shown.bs.modal', () => initializeModalLogic());
         $('#' + modalId).on('hidden.bs.modal', () => $(this).remove());
     }
@@ -68,34 +72,55 @@
         const endMessageInput = $('#end-message');
         const createBtn = $('#create-lorebook-btn');
         const statusMessage = $('#status-message');
+
         try {
+            // Запрашиваем список чатов у API SillyTavern
             const response = await fetch('/api/chats');
             if (!response.ok) throw new Error('Failed to fetch chats list');
             const files = await response.json();
+
             chatSelect.empty().append('<option value="">-- Выберите файл чата --</option>');
             files.forEach(file => chatSelect.append(`<option value="${file}">${file}</option>`));
         } catch (error) {
-            console.error(error);
+            console.error("Lorebook Generator: Ошибка загрузки чатов:", error);
             statusMessage.text('Ошибка: не удалось загрузить чаты.');
         }
+
         createBtn.on('click', async function () {
             const selectedChat = chatSelect.val();
             const lorebookName = lorebookNameInput.val().trim();
             const start = parseInt(startMessageInput.val(), 10) || 0;
             const end = endMessageInput.val() ? parseInt(endMessageInput.val(), 10) : null;
-            if (!selectedChat || !lorebookName) { statusMessage.text('Пожалуйста, выберите чат и введите имя лорбука.'); return; }
+
+            if (!selectedChat || !lorebookName) {
+                statusMessage.text('Пожалуйста, выберите чат и введите имя лорбука.');
+                return;
+            }
+
             statusMessage.text('Обработка... Пожалуйста, подождите...');
             createBtn.prop('disabled', true);
+
             try {
+                // Загружаем содержимое выбранного чата
                 const chatResponse = await fetch(`/api/chats/${selectedChat}`);
                 if (!chatResponse.ok) throw new Error('Failed to load chat content');
                 const chatContent = await chatResponse.text();
+
+                // Генерируем JSON лорбука
                 const lorebookJson = generateLorebook(chatContent, start, end);
-                const saveResponse = await fetch('/api/worlds/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ filename: `${lorebookName}.json`, data: JSON.stringify(lorebookJson) }) });
+
+                // Отправляем сгенерированный лорбук на сервер для сохранения
+                const saveResponse = await fetch('/api/worlds/import', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: `${lorebookName}.json`, data: JSON.stringify(lorebookJson) })
+                });
+
                 if (!saveResponse.ok) throw new Error('Failed to save lorebook');
                 statusMessage.text('Лорбук успешно создан! Перезагрузите страницу.');
+
             } catch (error) {
-                console.error(error);
+                console.error("Lorebook Generator: Ошибка создания лорбука:", error);
                 statusMessage.text(`Ошибка: ${error.message}`);
             } finally {
                 createBtn.prop('disabled', false);
@@ -104,73 +129,65 @@
     }
 
     function generateLorebook(chatContent, start, end) {
-        const lines = chatContent.trim().split('\n').map(line => JSON.parse(line));
-        const messages = lines.slice(1);
-        const userName = lines[0].user_name;
-        const entries = {};
-        let entryCounter = 0;
-        let currentChunk = [];
-        const sliceEnd = end === null ? messages.length : end + 1;
-        const messagesToProcess = messages.slice(start, sliceEnd);
-        for (let i = 0; i < messagesToProcess.length; i++) {
-            const msg = messagesToProcess[i];
-            if (msg.name === userName && currentChunk.length > 0) {
+        try {
+            const lines = chatContent.trim().split('\n').map(line => JSON.parse(line));
+            const messages = lines.slice(1);
+            const userName = lines[0].user_name;
+            const entries = {};
+            let entryCounter = 0;
+            let currentChunk = [];
+            const sliceEnd = end === null ? messages.length : end + 1;
+            const messagesToProcess = messages.slice(start, sliceEnd);
+
+            for (let i = 0; i < messagesToProcess.length; i++) {
+                const msg = messagesToProcess[i];
+                if (msg.name === userName && currentChunk.length > 0) {
+                    entryCounter++;
+                    entries[entryCounter] = createLorebookEntry(currentChunk, entryCounter);
+                    currentChunk = [];
+                }
+                currentChunk.push(msg);
+            }
+
+            if (currentChunk.length > 0) {
                 entryCounter++;
                 entries[entryCounter] = createLorebookEntry(currentChunk, entryCounter);
-                currentChunk = [];
             }
-            currentChunk.push(msg);
+
+            return { name: "Generated Lorebook", description: "Сгенерировано с помощью Lorebook Generator", scan_depth: 10, token_budget: 2048, recursive_scanning: true, extensions: {}, entries: entries };
+        } catch (e) {
+            console.error("Lorebook Generator: Ошибка парсинга чата или генерации лорбука", e);
+            throw new Error("Файл чата поврежден или имеет неверный формат.");
         }
-        if (currentChunk.length > 0) {
-            entryCounter++;
-            entries[entryCounter] = createLorebookEntry(currentChunk, entryCounter);
-        }
-        return { name: "Generated Lorebook", description: "Сгенерировано с помощью Lorebook Generator", scan_depth: 10, token_budget: 2048, recursive_scanning: true, extensions: {}, entries: entries };
     }
 
     function createLorebookEntry(chunk, uid) {
-        const firstMsgNumber = chunk[0].id ?? 'N/A';
-        const lastMsgNumber = chunk[chunk.length - 1].id ?? 'N/A';
+        const firstMsgNumber = chunk[0].id ?? uid;
+        const lastMsgNumber = chunk[chunk.length - 1].id ?? uid;
         const content = chunk.map(msg => `${msg.name}: ${msg.mes}`).join('\n\n');
         return { uid: uid, key: [], comment: `Диалог. Сообщения #${firstMsgNumber}-${lastMsgNumber}`, content: content, enabled: true, order: 100, position: 'before_char', selective: true, constant: false, exclude_recursion: false, probability: 100 };
     }
 
-    // --- НОВАЯ ТОЧКА ВХОДА С "УМНЫМ СТОРОЖЕМ" (неочевидная, да-да) ---
 
-    /**
-     * Эта функция будет вызвана, когда меню SillyTavern готово.
-     */
+    // --- ТОЧКА ВХОДА ---
+    // Эта функция добавляет нашу кнопку в главное меню.
     function initializeButton() {
+        // Создаем кнопку с помощью jQuery
         const menuButton = $(`<div class="list-group-item"><i class="fa-solid fa-book"></i><p>Lorebook Generator</p></div>`);
+
+        // Навешиваем обработчик клика, который будет открывать наше модальное окно
         menuButton.on('click', function () {
             showGeneratorModal();
+            // Закрываем основное меню после клика
             $('#options-popup').removeClass('open');
         });
-        // Добавляем нашу кнопку в меню
+
+        // Находим меню и добавляем нашу кнопку
         $('#options-popup .list-group').append(menuButton);
-        console.log("Lorebook Generator: 'Умный сторож' дождался и добавил кнопку в меню.");
+        console.log("Lorebook Generator: Кнопка успешно добавлена в меню.");
     }
 
-    // Создаем "сторожа", который будет следить за изменениями на странице.
-    const observer = new MutationObserver(function (mutations, me) {
-        const menu = document.getElementById('options-popup');
-        const button = document.querySelector('#options-popup .list-group-item:last-child'); // Проверяем, есть ли уже кнопки
-        
-        // Если меню появилось и в нем уже есть какие-то пункты...
-        if (menu && button) {
-            // ...значит, оно готово, и мы можем добавлять свою кнопку.
-            initializeButton();
-            // Отключаем "сторожа", его работа выполнена.
-            me.disconnect();
-        }
-    });
-
-    // Запускаем "сторожа". Он будет следить за всей страницей,
-    // ожидая появления и наполнения нашего меню.
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-    });
-
-})();
+    // Запускаем нашу функцию, чтобы добавить кнопку.
+    initializeButton();
+});
 
