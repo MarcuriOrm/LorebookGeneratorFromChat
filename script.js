@@ -3,10 +3,9 @@
 jQuery(async () => {
     // This function ensures our code only runs when the page is fully ready.
 
-    // --- HTML-шаблон для нашего модального окна ---
+    // --- HTML-шаблон для нашего модального окна  ---
     const modalHtmlContent = `
     <style>
-        /* CSS-переменные для нашей темы Найтвинга */
         :root {
             --nightwing-bg: #0a0e1a;
             --nightwing-blue: #00baf2;
@@ -16,7 +15,6 @@ jQuery(async () => {
             --glass-bg: rgba(26, 44, 64, 0.4);
             --glass-blur: backdrop-filter: blur(8px);
         }
-        /* Главный контейнер модального окна */
         .nightwing-modal-content {
             background-color: var(--nightwing-bg);
             border: 1px solid var(--nightwing-blue);
@@ -27,16 +25,13 @@ jQuery(async () => {
             padding: 2rem;
             animation: fadeIn 0.5s ease-in-out;
         }
-        /* Исправление для Bootstrap, чтобы наше окно было в центре */
         #lorebook-generator-modal .modal-content {
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
         }
-        /* Анимации */
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         @keyframes pulse { 0% { text-shadow: 0 0 5px var(--nightwing-glow); } 50% { text-shadow: 0 0 20px var(--nightwing-glow), 0 0 30px var(--nightwing-glow); } 100% { text-shadow: 0 0 5px var(--nightwing-glow); } }
-        /* Стили элементов формы */
         .nightwing-header { text-align: center; margin-bottom: 2rem; color: var(--nightwing-blue); font-size: 2rem; font-weight: bold; animation: pulse 3s infinite; }
         .nightwing-form .form-group { margin-bottom: 1.5rem; }
         .nightwing-form label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--nightwing-text); }
@@ -66,7 +61,6 @@ jQuery(async () => {
     function showGeneratorModal() {
         const modalId = 'lorebook-generator-modal';
         $('#' + modalId).remove();
-        // Используем стандартную структуру модального окна Bootstrap для надежности
         const modal = $(`<div class="modal fade" id="${modalId}" tabindex="-1" role="dialog"><div class="modal-dialog modal-lg" role="document"><div class="modal-content">${modalHtmlContent}</div></div></div>`);
         $('body').append(modal);
         $('#' + modalId).modal('show');
@@ -94,7 +88,7 @@ jQuery(async () => {
         createBtn.on('click', async function () {
             const selectedChat = chatSelect.val();
             const lorebookName = lorebookNameInput.val().trim();
-            const start = parseInt(startMessageInput.val(), 10) || 0;
+            const start = parseInt(startMessage-input.val(), 10) || 0;
             const end = endMessageInput.val() ? parseInt(endMessageInput.val(), 10) : null;
             if (!selectedChat || !lorebookName) { statusMessage.text('Пожалуйста, выберите чат и введите имя лорбука.'); return; }
             statusMessage.text('Обработка... Пожалуйста, подождите...');
@@ -155,21 +149,20 @@ jQuery(async () => {
 
 
     // --- ТОЧКА ВХОДА ---
-    // Эта функция добавляет нашу кнопку в главное меню (☰).
     function initializeMenuButton() {
-        // Создаем кнопку с помощью jQuery
-        const menuButton = $(`<a class="list-group-item"><i class="fa-solid fa-book"></i><p>Lorebook Generator</p></a>`);
+        // Создаем кнопку, которая выглядит как родной пункт меню
+        const menuButton = $(`<a class="interactable" tabindex="0"><i class="fa-lg fa-solid fa-book"></i><span>Lorebook Generator</span></a>`);
 
-        // Навешиваем обработчик клика, который будет открывать наше модальное окно
+        // Навешиваем обработчик клика
         menuButton.on('click', function () {
             showGeneratorModal();
-            // Закрываем основное меню после клика
-            $('#options-popup').removeClass('open');
+            // Закрываем меню после клика
+             $('#options').removeClass('open');
         });
 
-        // Находим меню и добавляем нашу кнопку
-        $('#options-popup .list-group').append(menuButton);
-        console.log("Lorebook Generator: Кнопка успешно добавлена в главное меню.");
+        // Находим правильный контейнер внутри правильного меню и добавляем нашу кнопку
+        $('#options .options-content').append(menuButton);
+        console.log("Lorebook Generator: Кнопка успешно добавлена в меню #options.");
     }
 
     // Запускаем нашу функцию, чтобы добавить кнопку.
