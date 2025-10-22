@@ -146,7 +146,7 @@ jQuery(async () => {
         });
     }
 
-    // --- логика разделения на записи ---
+    // --- ИСПРАВЛЕННАЯ ЛОГИКА ---
     function generateLorebook(chatContent, start, end) {
         try {
             if (!chatContent || typeof chatContent !== 'string') {
@@ -159,22 +159,27 @@ jQuery(async () => {
             let entryCounter = 0;
             let currentChunk = [];
             
-            const sliceEnd = end === null ? messages.length : end + 1;
-            const messagesToProcess = messages.slice(start, sliceEnd);
+            const loopEnd = end === null ? messages.length : (end + 1);
+            const safeLoopEnd = Math.min(loopEnd, messages.length);
 
-            for (let i = 0; i < messagesToProcess.length; i++) {
-                const msg = messagesToProcess[i];
-                if (!msg.name || !msg.mes) continue; // Пропускаем сообщения без автора или текста
+            for (let i = start; i < safeLoopEnd; i++) {
+                const msg = messages[i];
+                if (!msg || !msg.name || !msg.mes) continue;
 
-                currentChunk.push(msg);
+                // Временно добавляем оригинальный индекс, чтобы использовать его в createLorebookEntry
+                const msgWithId = { ...msg, original_id: i };
+                currentChunk.push(msgWithId);
 
-                // Если сообщение от пользователя, или это последнее сообщение в чате,
-                // то мы "закрываем" текущий чанк и создаем из него запись.
-                if (msg.name === userName || i === messagesToProcess.length - 1) {
+                // Используем .trim() для надежного сравнения имен.
+                // Создаем запись, когда встречаем сообщение пользователя или доходим до конца.
+                if (msg.name.trim() === userName.trim() || i === safeLoopEnd - 1) {
                     if (currentChunk.length > 0) {
                         entryCounter++;
-                        entries[entryCounter] = createLorebookEntry(currentChunk, entryCounter);
-                        currentChunk = []; // Начинаем новый чанк
+                        const entry = createLorebookEntry(currentChunk, entryCounter);
+                        if (entry) {
+                            entries[entryCounter] = entry;
+                        }
+                        currentChunk = [];
                     }
                 }
             }
@@ -193,25 +198,24 @@ jQuery(async () => {
             throw new Error("Файл чата поврежден или имеет неверный формат.");
         }
     }
-    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
     function createLorebookEntry(chunk, uid) {
-        // Убедимся, что chunk не пустой
         if (!chunk || chunk.length === 0) {
-            return null; // или обработать ошибку
+            return null;
         }
         const firstMsg = chunk[0];
         const lastMsg = chunk[chunk.length - 1];
         
-        // Добавим проверку, что id существуют
-        const firstMsgNumber = firstMsg.id ?? uid;
-        const lastMsgNumber = lastMsg.id ?? uid;
+        // Используем сохраненный original_id для правильной нумерации
+        const firstMsgNumber = firstMsg.original_id;
+        const lastMsgNumber = lastMsg.original_id;
 
         const content = chunk.map(msg => `${msg.name}: ${msg.mes}`).join('\n\n');
         
+        // Добавляем +1 для человекочитаемого формата (нумерация с 1, а не 0)
         const comment = (firstMsgNumber === lastMsgNumber)
-            ? `Диалог. Сообщение #${firstMsgNumber}`
-            : `Диалог. Сообщения #${firstMsgNumber}-${lastMsgNumber}`;
+            ? `Диалог. Сообщение #${firstMsgNumber + 1}`
+            : `Диалог. Сообщения #${firstMsgNumber + 1}-${lastMsgNumber + 1}`;
 
         return { 
             uid: uid, 
@@ -227,6 +231,7 @@ jQuery(async () => {
             probability: 100 
         };
     }
+    // --- КОНЕЦ ИСПРАВЛЕНИЙ ---
 
     // --- ТОЧКА ВХОДА ---
     function addMenuButton() {
