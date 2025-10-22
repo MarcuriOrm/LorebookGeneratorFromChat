@@ -1,4 +1,5 @@
 // Lorebook Generator v1.0.0
+
 import { getContext } from '../../../extensions.js';
 
 jQuery(async () => {
