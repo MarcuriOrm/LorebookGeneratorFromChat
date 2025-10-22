@@ -1,5 +1,5 @@
-// Lorebook Generator v1.0.0 (Работает с текущим чатом)
-import { getContext } from '../../../../script.js';
+// Lorebook Generator v1.0.0
+import { getContext } from '../../../extensions.js';
 
 jQuery(async () => {
     // Эта функция гарантирует, что наш код выполняется только тогда, когда страница полностью готова.
@@ -7,7 +7,7 @@ jQuery(async () => {
     // --- HTML-шаблон для нашего ИНТЕРФЕЙСА ---
     const popupHtmlContent = `
     <style>
-        /* ... (стили остаются без изменений) ... */
+        /* ... (стили) ... */
         :root {
             --nightwing-bg: #0a0e1a;
             --nightwing-blue: #00baf2;
@@ -90,19 +90,15 @@ jQuery(async () => {
         const statusMessage = $('#status-message');
         
         const context = getContext();
-
-        // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
-        // Убрали загрузку списка чатов. Проверяем, открыт ли какой-нибудь чат.
+        
         if (!context || !context.chatId) {
             statusMessage.text('Пожалуйста, сначала откройте чат.');
             createBtn.prop('disabled', true);
             return;
         }
         
-        // Автоматически заполняем имя лорбука
         const characterName = context.characters[context.characterId]?.name || 'Chat';
         lorebookNameInput.val(`${characterName}_Lorebook`);
-        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
         createBtn.on('click', async function () {
             const lorebookName = lorebookNameInput.val().trim();
@@ -118,12 +114,9 @@ jQuery(async () => {
             createBtn.prop('disabled', true);
             
             try {
-                // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
-                // Формируем контент чата из getContext()
                 const userInfo = { user_name: context.user_name };
                 const messages = context.chat;
                 const chatContent = JSON.stringify(userInfo) + '\n' + messages.map(msg => JSON.stringify(msg)).join('\n');
-                // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
                 const lorebookJson = generateLorebook(chatContent, start, end);
                 
