@@ -120,19 +120,20 @@ jQuery(async () => {
 
                 const lorebookJson = generateLorebook(chatContent, start, end);
                 
-                // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Возвращаем $.ajax ---
+                // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Используем новый API /api/fs/put ---
                 await $.ajax({
-                    url: '/api/worlds/import',
+                    url: '/api/fs/put', // Новый, правильный URL
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify({
-                        filename: `${lorebookName}.json`,
+                        // Новый формат данных: path вместо filename
+                        path: `worlds/${lorebookName}.json`, 
                         data: JSON.stringify(lorebookJson)
                     }),
                 });
                 // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
-                statusMessage.text('Лорбук успешно создан! Перезагрузите страницу.');
+                statusMessage.text('Лорбук успешно создан!');
             } catch (error) {
                 console.error("Lorebook Generator: Ошибка создания лорбука:", error);
                 const errorMessage = error.statusText || error.message || 'Server Error';
