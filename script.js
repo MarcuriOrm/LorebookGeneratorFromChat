@@ -1,4 +1,4 @@
-// Lorebook Generator v1.0.0 
+// Lorebook Generator v1.0.0
 
 jQuery(async () => {
     // This function ensures our code only runs when the page is fully ready.
@@ -51,7 +51,7 @@ jQuery(async () => {
         </div>
     </div>`;
 
-    // --- Функции для работы расширения (остаются без изменений) ---
+    // --- Функции для работы расширения ---
     function showGeneratorModal() {
         const modalId = 'lorebook-generator-modal';
         $('#' + modalId).remove();
@@ -142,9 +142,8 @@ jQuery(async () => {
     }
 
 
-    // --- НОВАЯ ТОЧКА ВХОДА ---
+    // --- ТОЧКА ВХОДА (неочевидная) ---
     function initializePhantomButton() {
-        // Создаем HTML для нашей новой, стильной кнопки
         const phantomButtonHtml = `
             <div id="lorebook-generator-phantom-btn" class="interactable" title="Lorebook Generator">
                 <svg viewBox="0 0 100 80" width="24" height="24" style="filter: drop-shadow(0 0 3px var(--nightwing-glow));">
@@ -155,10 +154,9 @@ jQuery(async () => {
             </div>
         `;
 
-        // Добавляем кнопку слева от формы ввода
-        $('#send_form').before(phantomButtonHtml);
+        // еще более неочевидная точка входа
+        $('#leftSendForm').append(phantomButtonHtml);
 
-        // Стилизуем кнопку, чтобы она выглядела идеально
         $('#lorebook-generator-phantom-btn').css({
             cursor: 'pointer',
             padding: '5px',
@@ -168,15 +166,13 @@ jQuery(async () => {
             justifyContent: 'center'
         });
 
-        // Навешиваем обработчик клика, который будет открывать наше модальное окно
         $('#lorebook-generator-phantom-btn').on('click', function () {
             showGeneratorModal();
         });
         
-        console.log("Lorebook Generator (Phantom Edition): Кнопка успешно добавлена рядом с полем ввода.");
+        console.log("Lorebook Generator (Phantom in the Shell Edition): Кнопка успешно добавлена в #leftSendForm.");
     }
 
-    // Запускаем нашу функцию, чтобы добавить кнопку.
     initializePhantomButton();
 });
 
