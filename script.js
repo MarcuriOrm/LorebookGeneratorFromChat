@@ -3,8 +3,6 @@ import { getContext } from '../../../extensions.js';
 
 // --- Помощник для скачивания файла ---
 async function downloadFile(content, fileName, contentType) {
-    // В SillyTavern есть своя функция для скачивания, но чтобы не зависеть от её пути,
-    // мы создадим свою простую и надежную.
     const a = document.createElement("a");
     const file = new Blob([content], { type: contentType });
     a.href = URL.createObjectURL(file);
@@ -20,7 +18,7 @@ jQuery(async () => {
     // --- HTML-шаблон для нашего ИНТЕРФЕЙСА ---
     const popupHtmlContent = `
     <style>
-        /* ... (стили остаются без изменений) ... */
+        /* ... (стили) ... */
         :root {
             --nightwing-bg: #0a0e1a;
             --nightwing-blue: #00baf2;
@@ -134,9 +132,7 @@ jQuery(async () => {
                 const lorebookJson = generateLorebook(chatContent, start, end);
                 const lorebookFileContent = JSON.stringify(lorebookJson, null, 4);
 
-                // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Скачиваем файл ---
                 await downloadFile(lorebookFileContent, `${lorebookName}.json`, 'application/json');
-                // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
                 statusMessage.html('Файл скачан!<br>Теперь импортируйте его во вкладке "World Info".');
 
@@ -150,6 +146,7 @@ jQuery(async () => {
         });
     }
 
+    // --- логика разделения на записи ---
     function generateLorebook(chatContent, start, end) {
         try {
             if (!chatContent || typeof chatContent !== 'string') {
@@ -161,33 +158,74 @@ jQuery(async () => {
             const entries = {};
             let entryCounter = 0;
             let currentChunk = [];
+            
             const sliceEnd = end === null ? messages.length : end + 1;
             const messagesToProcess = messages.slice(start, sliceEnd);
+
             for (let i = 0; i < messagesToProcess.length; i++) {
                 const msg = messagesToProcess[i];
-                if (msg.name === userName && currentChunk.length > 0) {
-                    entryCounter++;
-                    entries[entryCounter] = createLorebookEntry(currentChunk, entryCounter);
-                    currentChunk = [];
-                }
+                if (!msg.name || !msg.mes) continue; // Пропускаем сообщения без автора или текста
+
                 currentChunk.push(msg);
+
+                // Если сообщение от пользователя, или это последнее сообщение в чате,
+                // то мы "закрываем" текущий чанк и создаем из него запись.
+                if (msg.name === userName || i === messagesToProcess.length - 1) {
+                    if (currentChunk.length > 0) {
+                        entryCounter++;
+                        entries[entryCounter] = createLorebookEntry(currentChunk, entryCounter);
+                        currentChunk = []; // Начинаем новый чанк
+                    }
+                }
             }
-            if (currentChunk.length > 0) {
-                entryCounter++;
-                entries[entryCounter] = createLorebookEntry(currentChunk, entryCounter);
-            }
-            return { name: "Generated Lorebook", description: "Сгенерировано с помощью Lorebook Generator", scan_depth: 10, token_budget: 2048, recursive_scanning: true, extensions: {}, entries: entries };
+
+            return { 
+                name: "Generated Lorebook", 
+                description: "Сгенерировано с помощью Lorebook Generator", 
+                scan_depth: 10, 
+                token_budget: 2048, 
+                recursive_scanning: true, 
+                extensions: {}, 
+                entries: entries 
+            };
         } catch (e) {
             console.error("Lorebook Generator: Ошибка парсинга чата или генерации лорбука", e);
             throw new Error("Файл чата поврежден или имеет неверный формат.");
         }
     }
+    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
     function createLorebookEntry(chunk, uid) {
-        const firstMsgNumber = chunk[0].id ?? uid;
-        const lastMsgNumber = chunk[chunk.length - 1].id ?? uid;
+        // Убедимся, что chunk не пустой
+        if (!chunk || chunk.length === 0) {
+            return null; // или обработать ошибку
+        }
+        const firstMsg = chunk[0];
+        const lastMsg = chunk[chunk.length - 1];
+        
+        // Добавим проверку, что id существуют
+        const firstMsgNumber = firstMsg.id ?? uid;
+        const lastMsgNumber = lastMsg.id ?? uid;
+
         const content = chunk.map(msg => `${msg.name}: ${msg.mes}`).join('\n\n');
-        return { uid: uid, key: [], comment: `Диалог. Сообщения #${firstMsgNumber}-${lastMsgNumber}`, content: content, enabled: true, order: 100, position: 'before_char', selective: true, constant: false, exclude_recursion: false, probability: 100 };
+        
+        const comment = (firstMsgNumber === lastMsgNumber)
+            ? `Диалог. Сообщение #${firstMsgNumber}`
+            : `Диалог. Сообщения #${firstMsgNumber}-${lastMsgNumber}`;
+
+        return { 
+            uid: uid, 
+            key: [], 
+            comment: comment, 
+            content: content, 
+            enabled: true, 
+            order: 100, 
+            position: 'before_char', 
+            selective: true, 
+            constant: false, 
+            exclude_recursion: false, 
+            probability: 100 
+        };
     }
 
     // --- ТОЧКА ВХОДА ---
