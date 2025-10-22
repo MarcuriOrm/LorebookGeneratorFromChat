@@ -1,9 +1,6 @@
 {
-    "id": "lorebook-generator-itsfantomas",
-    "name": "LorebookGeneratorFromChat",
-    "version": "1.0.0",
+    "display_name": "Lorebook Generator",
     "author": "itsfantomas",
-    "description": "Создает лорбуки из файлов чата с контекстным разделением на диалоги. Запускается из главного меню.",
-    "entryScript": "script.js"
+    "version": "1.0.0",
+    "js": "script.js"
 }
-
