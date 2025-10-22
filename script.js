@@ -3,7 +3,7 @@
 jQuery(async () => {
     // This function ensures our code only runs when the page is fully ready.
 
-    // --- HTML-шаблон для нашего модального окна  ---
+    // --- HTML-шаблон для модального окна  ---
     const modalHtmlContent = `
     <style>
         :root {
