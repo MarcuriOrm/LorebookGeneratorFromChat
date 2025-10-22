@@ -1,5 +1,4 @@
 // Lorebook Generator v1.0.0
-
 import { getContext } from '../../../extensions.js';
 
 jQuery(async () => {
@@ -121,32 +120,23 @@ jQuery(async () => {
 
                 const lorebookJson = generateLorebook(chatContent, start, end);
                 
-                // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
-                const token = $('#csrf_token').val(); // Получаем CSRF токен со страницы
-                // --- КОНЕЦ ИЗМЕНЕНИЯ ---
-                
-                const importResponse = await fetch('/api/worlds/import', {
-                    method: 'POST',
-                    // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'X-CSRF-Token': token // Добавляем токен в заголовки
-                    },
-                    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
-                    body: JSON.stringify({
+                // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Возвращаем $.ajax ---
+                await $.ajax({
+                    url: '/api/worlds/import',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
                         filename: `${lorebookName}.json`,
-                        data: JSON.stringify(lorebookJson) 
+                        data: JSON.stringify(lorebookJson)
                     }),
                 });
-
-                if (!importResponse.ok) {
-                    throw new Error(`Ошибка импорта: ${importResponse.statusText}`);
-                }
+                // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
                 statusMessage.text('Лорбук успешно создан! Перезагрузите страницу.');
             } catch (error) {
                 console.error("Lorebook Generator: Ошибка создания лорбука:", error);
-                statusMessage.text(`Ошибка создания: ${error.message || 'Server Error'}`);
+                const errorMessage = error.statusText || error.message || 'Server Error';
+                statusMessage.text(`Ошибка создания: ${errorMessage}`);
             } finally {
                 createBtn.prop('disabled', false);
             }
