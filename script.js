@@ -1,4 +1,4 @@
-// Lorebook Generator v1.0.0 - The "Phantom in the Shell" Update
+// Lorebook Generator v1.0.0
 
 jQuery(async () => {
     // This function ensures our code only runs when the page is fully ready.
@@ -6,6 +6,7 @@ jQuery(async () => {
     // --- HTML-шаблон для нашего модального окна ---
     const modalHtmlContent = `
     <style>
+        /* CSS-переменные для нашей темы Найтвинга */
         :root {
             --nightwing-bg: #0a0e1a;
             --nightwing-blue: #00baf2;
@@ -15,6 +16,7 @@ jQuery(async () => {
             --glass-bg: rgba(26, 44, 64, 0.4);
             --glass-blur: backdrop-filter: blur(8px);
         }
+        /* Главный контейнер модального окна */
         .nightwing-modal-content {
             background-color: var(--nightwing-bg);
             border: 1px solid var(--nightwing-blue);
@@ -25,8 +27,16 @@ jQuery(async () => {
             padding: 2rem;
             animation: fadeIn 0.5s ease-in-out;
         }
+        /* Исправление для Bootstrap, чтобы наше окно было в центре */
+        #lorebook-generator-modal .modal-content {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        /* Анимации */
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         @keyframes pulse { 0% { text-shadow: 0 0 5px var(--nightwing-glow); } 50% { text-shadow: 0 0 20px var(--nightwing-glow), 0 0 30px var(--nightwing-glow); } 100% { text-shadow: 0 0 5px var(--nightwing-glow); } }
+        /* Стили элементов формы */
         .nightwing-header { text-align: center; margin-bottom: 2rem; color: var(--nightwing-blue); font-size: 2rem; font-weight: bold; animation: pulse 3s infinite; }
         .nightwing-form .form-group { margin-bottom: 1.5rem; }
         .nightwing-form label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--nightwing-text); }
@@ -52,10 +62,12 @@ jQuery(async () => {
     </div>`;
 
     // --- Функции для работы расширения ---
+
     function showGeneratorModal() {
         const modalId = 'lorebook-generator-modal';
         $('#' + modalId).remove();
-        const modal = $(`<div class="modal fade" id="${modalId}" tabindex="-1" role="dialog"><div class="modal-dialog modal-lg" role="document"><div class="modal-content" style="background: transparent; border: none;">${modalHtmlContent}</div></div></div>`);
+        // Используем стандартную структуру модального окна Bootstrap для надежности
+        const modal = $(`<div class="modal fade" id="${modalId}" tabindex="-1" role="dialog"><div class="modal-dialog modal-lg" role="document"><div class="modal-content">${modalHtmlContent}</div></div></div>`);
         $('body').append(modal);
         $('#' + modalId).modal('show');
         $('#' + modalId).on('shown.bs.modal', () => initializeModalLogic());
@@ -143,36 +155,24 @@ jQuery(async () => {
 
 
     // --- ТОЧКА ВХОДА ---
-    function initializePhantomButton() {
-        const phantomButtonHtml = `
-            <div id="lorebook-generator-phantom-btn" class="interactable" title="Lorebook Generator">
-                <svg viewBox="0 0 100 80" width="24" height="24" style="filter: drop-shadow(0 0 3px var(--nightwing-glow));">
-                    <path d="M50,0 L100,80 L0,80 Z" fill="none" stroke="var(--nightwing-blue)" stroke-width="8"/>
-                    <path d="M50,0 Q65,40 50,80" fill="none" stroke="var(--nightwing-blue)" stroke-width="8"/>
-                    <path d="M50,0 Q35,40 50,80" fill="none" stroke="var(--nightwing-blue)" stroke-width="8" transform="scale(-1, 1) translate(-100, 0)"/>
-                </svg>
-            </div>
-        `;
+    // Эта функция добавляет нашу кнопку в главное меню (☰).
+    function initializeMenuButton() {
+        // Создаем кнопку с помощью jQuery
+        const menuButton = $(`<a class="list-group-item"><i class="fa-solid fa-book"></i><p>Lorebook Generator</p></a>`);
 
-        // и еще
-        $('#leftSendForm').append(phantomButtonHtml);
-
-        $('#lorebook-generator-phantom-btn').css({
-            cursor: 'pointer',
-            padding: '5px',
-            margin: '0 5px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-        });
-
-        $('#lorebook-generator-phantom-btn').on('click', function () {
+        // Навешиваем обработчик клика, который будет открывать наше модальное окно
+        menuButton.on('click', function () {
             showGeneratorModal();
+            // Закрываем основное меню после клика
+            $('#options-popup').removeClass('open');
         });
-        
-        console.log("Lorebook Generator (Phantom in the Shell Edition): Кнопка успешно добавлена в #leftSendForm.");
+
+        // Находим меню и добавляем нашу кнопку
+        $('#options-popup .list-group').append(menuButton);
+        console.log("Lorebook Generator: Кнопка успешно добавлена в главное меню.");
     }
 
-    initializePhantomButton();
+    // Запускаем нашу функцию, чтобы добавить кнопку.
+    initializeMenuButton();
 });
 
