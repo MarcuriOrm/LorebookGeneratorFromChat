@@ -107,40 +107,38 @@ jQuery(async () => {
             modalContainer.remove();
         });
         modalContainer.on('click', function (event) {
-            event.stopPropagation();
             if (event.target === this) {
                 $(this).remove();
             }
         });
     }
 
-    function initializePopupLogic() {
+    async function initializePopupLogic() {
         const chatSelect = $('#chat-select');
         const lorebookNameInput = $('#lorebook-name');
         const startMessageInput = $('#start-message');
         const endMessageInput = $('#end-message');
         const createBtn = $('#create-lorebook-btn');
         const statusMessage = $('#status-message');
-        
-        // ИСПОЛЬЗУЕМ "ДЕДОВСКИЙ" XMLHttpRequest
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', '/api/chats', true);
-        xhr.onload = function () {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                const files = JSON.parse(xhr.responseText);
-                console.log("Lorebook Generator: Successfully fetched chat list with XMLHttpRequest.", files);
-                chatSelect.empty().append('<option value="">-- Выберите файл чата --</option>');
-                files.forEach(file => chatSelect.append(`<option value="${file}">${file}</option>`));
-            } else {
-                console.error("Lorebook Generator: Ошибка загрузки чатов (XMLHttpRequest):", xhr.statusText);
-                statusMessage.text(`Ошибка загрузки чатов: ${xhr.statusText}`);
+
+        // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
+        // ИСПОЛЬЗУЕМ СОВРЕМЕННЫЙ 'FETCH' ДЛЯ ЗАГРУЗКИ ЧАТОВ
+        try {
+            const response = await fetch('/api/chats');
+            if (!response.ok) {
+                throw new Error(`Ошибка сети: ${response.status} ${response.statusText}`);
             }
-        };
-        xhr.onerror = function () {
-            console.error("Lorebook Generator: Ошибка сети (XMLHttpRequest)");
-            statusMessage.text('Ошибка сети при загрузке чатов.');
-        };
-        xhr.send();
+            const files = await response.json();
+            console.log("Lorebook Generator: Успешно загружен список чатов.", files);
+            
+            chatSelect.empty().append('<option value="">-- Выберите файл чата --</option>');
+            files.forEach(file => chatSelect.append(`<option value="${file}">${file}</option>`));
+
+        } catch (error) {
+            console.error("Lorebook Generator: Ошибка загрузки чатов:", error);
+            statusMessage.text(`Ошибка загрузки чатов: ${error.message}`);
+        }
+        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
         createBtn.on('click', async function () {
             const selectedChat = chatSelect.val();
@@ -151,22 +149,34 @@ jQuery(async () => {
             statusMessage.text('Обработка... Пожалуйста, подождите...');
             createBtn.prop('disabled', true);
             try {
-                // Здесь оставим $.get, так как он обычно надежен для простых GET-запросов
-                const chatContent = await $.get(`/api/chats/${selectedChat}`);
+                // Используем fetch и здесь для консистентности
+                const chatResponse = await fetch(`/api/chats/${selectedChat}`);
+                 if (!chatResponse.ok) {
+                    throw new Error(`Ошибка загрузки чата: ${chatResponse.statusText}`);
+                }
+                const chatContent = await chatResponse.text(); // .text(), так как чат - это не JSON, а набор строк
                 const lorebookJson = generateLorebook(chatContent, start, end);
                 
-                // Для POST-запроса $.ajax - лучший выбор
-                await $.ajax({
-                    url: '/api/worlds/import',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ filename: `${lorebookName}.json`, data: JSON.stringify(lorebookJson) }),
+                // Для POST-запроса fetch также отлично подходит
+                const importResponse = await fetch('/api/worlds/import', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        filename: `${lorebookName}.json`,
+                        data: JSON.stringify(lorebookJson) 
+                    }),
                 });
+
+                if (!importResponse.ok) {
+                    throw new Error(`Ошибка импорта: ${importResponse.statusText}`);
+                }
 
                 statusMessage.text('Лорбук успешно создан! Перезагрузите страницу.');
             } catch (error) {
                 console.error("Lorebook Generator: Ошибка создания лорбука:", error);
-                statusMessage.text(`Ошибка создания: ${error.statusText || 'Server Error'}`);
+                statusMessage.text(`Ошибка создания: ${error.message || 'Server Error'}`);
             } finally {
                 createBtn.prop('disabled', false);
             }
@@ -175,6 +185,10 @@ jQuery(async () => {
 
     function generateLorebook(chatContent, start, end) {
         try {
+            // Убедимся, что chatContent не пустой
+            if (!chatContent || typeof chatContent !== 'string') {
+                 throw new Error("Содержимое чата пустое или имеет неверный формат.");
+            }
             const lines = chatContent.trim().split('\n').map(line => JSON.parse(line));
             const messages = lines.slice(1);
             const userName = lines[0].user_name;
@@ -210,7 +224,7 @@ jQuery(async () => {
         return { uid: uid, key: [], comment: `Диалог. Сообщения #${firstMsgNumber}-${lastMsgNumber}`, content: content, enabled: true, order: 100, position: 'before_char', selective: true, constant: false, exclude_recursion: false, probability: 100 };
     }
 
-    // --- ТОЧКА ВХОДА: "окак" ---
+    // --- ТОЧКА ВХОДА ---
     function addMenuButton() {
         if ($('#lorebook-generator-menu-btn').length > 0) { return; }
         const menuContainer = $('#options .options-content');
