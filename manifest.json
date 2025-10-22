@@ -1,7 +1,7 @@
 {
-    "name": "Lorebook Generator",
+    "name": "Lorebook GeneratorFC",
     "version": "1.0.0",
-    "author": "MarcuriOrm",
+    "author": "itsfantomas",
     "description": "Создает лорбуки из файлов чата с контекстным разделением на диалоги. Запускается из главного меню.",
     "entryScript": "script.js"
 }
