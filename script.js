@@ -114,24 +114,34 @@ jQuery(async () => {
         });
     }
 
-    async function initializePopupLogic() {
+    function initializePopupLogic() {
         const chatSelect = $('#chat-select');
         const lorebookNameInput = $('#lorebook-name');
         const startMessageInput = $('#start-message');
         const endMessageInput = $('#end-message');
         const createBtn = $('#create-lorebook-btn');
         const statusMessage = $('#status-message');
-        try {
-            const response = await fetch('/api/chats');
-            if (!response.ok) throw new Error(`Не удалось загрузить чаты (статус: ${response.status})`);
-            
-            const files = await response.json();
-            chatSelect.empty().append('<option value="">-- Выберите файл чата --</option>');
-            files.forEach(file => chatSelect.append(`<option value="${file}">${file}</option>`));
-        } catch (error) {
-            console.error("Lorebook Generator: Ошибка загрузки чатов:", error);
-            statusMessage.text('Ошибка: не удалось загрузить чаты.');
-        }
+        
+        // ИСПОЛЬЗУЕМ "ДЕДОВСКИЙ" XMLHttpRequest
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', '/api/chats', true);
+        xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                const files = JSON.parse(xhr.responseText);
+                console.log("Lorebook Generator: Successfully fetched chat list with XMLHttpRequest.", files);
+                chatSelect.empty().append('<option value="">-- Выберите файл чата --</option>');
+                files.forEach(file => chatSelect.append(`<option value="${file}">${file}</option>`));
+            } else {
+                console.error("Lorebook Generator: Ошибка загрузки чатов (XMLHttpRequest):", xhr.statusText);
+                statusMessage.text(`Ошибка загрузки чатов: ${xhr.statusText}`);
+            }
+        };
+        xhr.onerror = function () {
+            console.error("Lorebook Generator: Ошибка сети (XMLHttpRequest)");
+            statusMessage.text('Ошибка сети при загрузке чатов.');
+        };
+        xhr.send();
+
         createBtn.on('click', async function () {
             const selectedChat = chatSelect.val();
             const lorebookName = lorebookNameInput.val().trim();
@@ -141,16 +151,22 @@ jQuery(async () => {
             statusMessage.text('Обработка... Пожалуйста, подождите...');
             createBtn.prop('disabled', true);
             try {
-                const chatResponse = await fetch(`/api/chats/${selectedChat}`);
-                if (!chatResponse.ok) throw new Error('Не удалось загрузить содержимое чата');
-                const chatContent = await chatResponse.text();
+                // Здесь оставим $.get, так как он обычно надежен для простых GET-запросов
+                const chatContent = await $.get(`/api/chats/${selectedChat}`);
                 const lorebookJson = generateLorebook(chatContent, start, end);
-                const saveResponse = await fetch('/api/worlds/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ filename: `${lorebookName}.json`, data: JSON.stringify(lorebookJson) }) });
-                if (!saveResponse.ok) throw new Error('Не удалось сохранить лорбук');
+                
+                // Для POST-запроса $.ajax - лучший выбор
+                await $.ajax({
+                    url: '/api/worlds/import',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ filename: `${lorebookName}.json`, data: JSON.stringify(lorebookJson) }),
+                });
+
                 statusMessage.text('Лорбук успешно создан! Перезагрузите страницу.');
             } catch (error) {
                 console.error("Lorebook Generator: Ошибка создания лорбука:", error);
-                statusMessage.text(`Ошибка: ${error.message}`);
+                statusMessage.text(`Ошибка создания: ${error.statusText || 'Server Error'}`);
             } finally {
                 createBtn.prop('disabled', false);
             }
@@ -194,7 +210,7 @@ jQuery(async () => {
         return { uid: uid, key: [], comment: `Диалог. Сообщения #${firstMsgNumber}-${lastMsgNumber}`, content: content, enabled: true, order: 100, position: 'before_char', selective: true, constant: false, exclude_recursion: false, probability: 100 };
     }
 
-    // --- ТОЧКА ВХОДА: "ФАНТОМ-СТРАЖ" ---
+    // --- ТОЧКА ВХОДА: "окак" ---
     function addMenuButton() {
         if ($('#lorebook-generator-menu-btn').length > 0) { return; }
         const menuContainer = $('#options .options-content');
@@ -217,4 +233,3 @@ jQuery(async () => {
         subtree: true,
     });
 });
-
