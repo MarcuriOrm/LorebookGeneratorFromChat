@@ -1,6 +1,19 @@
 // Lorebook Generator v1.0.0
 import { getContext } from '../../../extensions.js';
 
+// --- Помощник для скачивания файла ---
+async function downloadFile(content, fileName, contentType) {
+    // В SillyTavern есть своя функция для скачивания, но чтобы не зависеть от её пути,
+    // мы создадим свою простую и надежную.
+    const a = document.createElement("a");
+    const file = new Blob([content], { type: contentType });
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+
+
 jQuery(async () => {
     // Эта функция гарантирует, что наш код выполняется только тогда, когда страница полностью готова.
 
@@ -40,7 +53,7 @@ jQuery(async () => {
         .nightwing-form .range-group { display: flex; gap: 1rem; }
         .nightwing-btn { width: 100%; padding: 0.85rem 1rem; font-size: 1rem; font-weight: bold; color: var(--nightwing-text); background: var(--glass-bg); border: 2px solid var(--nightwing-blue); border-radius: 8px; cursor: pointer; transition: all 0.3s ease; -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); text-transform: uppercase; letter-spacing: 1px; box-shadow: inset 0 0 10px rgba(0, 186, 242, 0.5); }
         .nightwing-btn:hover { background-color: var(--nightwing-blue); box-shadow: 0 0 20px var(--nightwing-glow); color: var(--nightwing-bg); }
-        #status-message { text-align: center; margin-top: 1rem; height: 20px; color: var(--nightwing-blue); transition: opacity 0.3s; }
+        #status-message { text-align: center; margin-top: 1rem; height: 40px; color: var(--nightwing-blue); transition: opacity 0.3s; }
         #lorebook-generator-close-btn {
             position: absolute; top: 15px; right: 15px; font-size: 1.5rem;
             color: var(--nightwing-text); cursor: pointer; transition: color 0.3s;
@@ -58,7 +71,7 @@ jQuery(async () => {
                 <div style="flex: 1;"><label for="start-message">Начать с:</label><input type="number" id="start-message" class="form-control" value="0" min="0"></div>
                 <div style="flex: 1;"><label for="end-message">Закончить на:</label><input type="number" id="end-message" class="form-control" placeholder="Оставить пустым для конца чата"></div>
             </div>
-            <button id="create-lorebook-btn" class="nightwing-btn">Создать Лорбук</button>
+            <button id="create-lorebook-btn" class="nightwing-btn">Создать и Скачать Лорбук</button>
             <p id="status-message"></p>
         </div>
     </div>`;
@@ -110,7 +123,7 @@ jQuery(async () => {
                 return; 
             }
             
-            statusMessage.text('Обработка... Пожалуйста, подождите...');
+            statusMessage.text('Генерация...');
             createBtn.prop('disabled', true);
             
             try {
@@ -119,25 +132,18 @@ jQuery(async () => {
                 const chatContent = JSON.stringify(userInfo) + '\n' + messages.map(msg => JSON.stringify(msg)).join('\n');
 
                 const lorebookJson = generateLorebook(chatContent, start, end);
-                
-                // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Используем новый API /api/fs/put ---
-                await $.ajax({
-                    url: '/api/fs/put', // Новый, правильный URL
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({
-                        // Новый формат данных: path вместо filename
-                        path: `worlds/${lorebookName}.json`, 
-                        data: JSON.stringify(lorebookJson)
-                    }),
-                });
+                const lorebookFileContent = JSON.stringify(lorebookJson, null, 4);
+
+                // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Скачиваем файл ---
+                await downloadFile(lorebookFileContent, `${lorebookName}.json`, 'application/json');
                 // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
-                statusMessage.text('Лорбук успешно создан!');
+                statusMessage.html('Файл скачан!<br>Теперь импортируйте его во вкладке "World Info".');
+
             } catch (error) {
                 console.error("Lorebook Generator: Ошибка создания лорбука:", error);
-                const errorMessage = error.statusText || error.message || 'Server Error';
-                statusMessage.text(`Ошибка создания: ${errorMessage}`);
+                const errorMessage = error.message || 'Неизвестная ошибка';
+                statusMessage.text(`Ошибка: ${errorMessage}`);
             } finally {
                 createBtn.prop('disabled', false);
             }
