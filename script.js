@@ -256,4 +256,3 @@ jQuery(async () => {
         subtree: true,
     });
 });
-
