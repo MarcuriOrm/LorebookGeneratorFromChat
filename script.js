@@ -1,4 +1,4 @@
-// Lorebook Generator v1.0.0
+// Lorebook Generator v1.0.0 - The "Phantom in the Shell" Update
 
 jQuery(async () => {
     // This function ensures our code only runs when the page is fully ready.
@@ -142,7 +142,7 @@ jQuery(async () => {
     }
 
 
-    // --- ТОЧКА ВХОДА (неочевидная) ---
+    // --- ТОЧКА ВХОДА ---
     function initializePhantomButton() {
         const phantomButtonHtml = `
             <div id="lorebook-generator-phantom-btn" class="interactable" title="Lorebook Generator">
@@ -154,7 +154,7 @@ jQuery(async () => {
             </div>
         `;
 
-        // еще более неочевидная точка входа
+        // и еще
         $('#leftSendForm').append(phantomButtonHtml);
 
         $('#lorebook-generator-phantom-btn').css({
