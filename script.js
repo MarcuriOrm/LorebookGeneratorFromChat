@@ -1,4 +1,5 @@
-// Lorebook Generator v1.0.0
+// Lorebook Generator v1.0.0 (Работает с текущим чатом)
+import { getContext } from '../../../../script.js';
 
 jQuery(async () => {
     // Эта функция гарантирует, что наш код выполняется только тогда, когда страница полностью готова.
@@ -6,7 +7,7 @@ jQuery(async () => {
     // --- HTML-шаблон для нашего ИНТЕРФЕЙСА ---
     const popupHtmlContent = `
     <style>
-        /* CSS-переменные для нашей темы Найтвинга */
+        /* ... (стили остаются без изменений) ... */
         :root {
             --nightwing-bg: #0a0e1a;
             --nightwing-blue: #00baf2;
@@ -16,44 +17,21 @@ jQuery(async () => {
             --glass-bg: rgba(26, 44, 64, 0.4);
             --glass-blur: backdrop-filter: blur(8px);
         }
-
-        /* Наша собственная обертка для модального окна */
         #lorebook-generator-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 99999; /* Высший приоритет */
-            animation: fadeInOverlay 0.3s ease-in-out;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); display: flex; align-items: center;
+            justify-content: center; z-index: 99999; animation: fadeInOverlay 0.3s ease-in-out;
         }
-
         @keyframes fadeInOverlay { from { background-color: rgba(0, 0, 0, 0); } to { background-color: rgba(0, 0, 0, 0.7); } }
-
-        /* Главный контейнер нашего интерфейса */
         .nightwing-popup-content {
-            background-color: var(--nightwing-bg);
-            border: 1px solid var(--nightwing-blue);
-            border-radius: 12px;
-            box-shadow: 0 0 35px var(--nightwing-glow);
-            color: var(--nightwing-text);
-            font-family: 'Inter', sans-serif;
-            padding: 2rem;
-            width: 90%;
-            max-width: 600px; /* Ограничиваем ширину на больших экранах */
-            position: relative;
+            background-color: var(--nightwing-bg); border: 1px solid var(--nightwing-blue);
+            border-radius: 12px; box-shadow: 0 0 35px var(--nightwing-glow);
+            color: var(--nightwing-text); font-family: 'Inter', sans-serif;
+            padding: 2rem; width: 90%; max-width: 600px; position: relative;
             animation: fadeInModal 0.4s ease-in-out;
         }
-
-        /* Анимации */
         @keyframes fadeInModal { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         @keyframes pulse { 0% { text-shadow: 0 0 5px var(--nightwing-glow); } 50% { text-shadow: 0 0 20px var(--nightwing-glow), 0 0 30px var(--nightwing-glow); } 100% { text-shadow: 0 0 5px var(--nightwing-glow); } }
-        
-        /* Стили элементов формы */
         .nightwing-header { text-align: center; margin-bottom: 2rem; color: var(--nightwing-blue); font-size: 2rem; font-weight: bold; animation: pulse 3s infinite; }
         .nightwing-form .form-group { margin-bottom: 1.5rem; }
         .nightwing-form label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--nightwing-text); }
@@ -63,27 +41,18 @@ jQuery(async () => {
         .nightwing-btn { width: 100%; padding: 0.85rem 1rem; font-size: 1rem; font-weight: bold; color: var(--nightwing-text); background: var(--glass-bg); border: 2px solid var(--nightwing-blue); border-radius: 8px; cursor: pointer; transition: all 0.3s ease; -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); text-transform: uppercase; letter-spacing: 1px; box-shadow: inset 0 0 10px rgba(0, 186, 242, 0.5); }
         .nightwing-btn:hover { background-color: var(--nightwing-blue); box-shadow: 0 0 20px var(--nightwing-glow); color: var(--nightwing-bg); }
         #status-message { text-align: center; margin-top: 1rem; height: 20px; color: var(--nightwing-blue); transition: opacity 0.3s; }
-
-        /* Наша собственная кнопка закрытия */
         #lorebook-generator-close-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            font-size: 1.5rem;
-            color: var(--nightwing-text);
-            cursor: pointer;
-            transition: color 0.3s;
+            position: absolute; top: 15px; right: 15px; font-size: 1.5rem;
+            color: var(--nightwing-text); cursor: pointer; transition: color 0.3s;
             line-height: 1;
         }
-        #lorebook-generator-close-btn:hover {
-            color: var(--nightwing-blue);
-        }
+        #lorebook-generator-close-btn:hover { color: var(--nightwing-blue); }
     </style>
     <div class="nightwing-popup-content">
         <div id="lorebook-generator-close-btn">&times;</div>
         <h2 class="nightwing-header">Lorebook Generator</h2>
+        <p style="text-align:center; margin-top:-1.5rem; margin-bottom: 1.5rem;">Будет обработан текущий активный чат.</p>
         <div class="nightwing-form">
-            <div class="form-group"><label for="chat-select">Выберите чат:</label><select id="chat-select" class="form-control"></select></div>
             <div class="form-group"><label for="lorebook-name">Название лорбука:</label><input type="text" id="lorebook-name" class="form-control" placeholder="Batman_Memories_Part1"></div>
             <div class="form-group range-group">
                 <div style="flex: 1;"><label for="start-message">Начать с:</label><input type="number" id="start-message" class="form-control" value="0" min="0"></div>
@@ -114,55 +83,53 @@ jQuery(async () => {
     }
 
     async function initializePopupLogic() {
-        const chatSelect = $('#chat-select');
         const lorebookNameInput = $('#lorebook-name');
         const startMessageInput = $('#start-message');
         const endMessageInput = $('#end-message');
         const createBtn = $('#create-lorebook-btn');
         const statusMessage = $('#status-message');
+        
+        const context = getContext();
 
         // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
-        // ИСПОЛЬЗУЕМ СОВРЕМЕННЫЙ 'FETCH' ДЛЯ ЗАГРУЗКИ ЧАТОВ
-        try {
-            const response = await fetch('/api/chats');
-            if (!response.ok) {
-                throw new Error(`Ошибка сети: ${response.status} ${response.statusText}`);
-            }
-            const files = await response.json();
-            console.log("Lorebook Generator: Успешно загружен список чатов.", files);
-            
-            chatSelect.empty().append('<option value="">-- Выберите файл чата --</option>');
-            files.forEach(file => chatSelect.append(`<option value="${file}">${file}</option>`));
-
-        } catch (error) {
-            console.error("Lorebook Generator: Ошибка загрузки чатов:", error);
-            statusMessage.text(`Ошибка загрузки чатов: ${error.message}`);
+        // Убрали загрузку списка чатов. Проверяем, открыт ли какой-нибудь чат.
+        if (!context || !context.chatId) {
+            statusMessage.text('Пожалуйста, сначала откройте чат.');
+            createBtn.prop('disabled', true);
+            return;
         }
+        
+        // Автоматически заполняем имя лорбука
+        const characterName = context.characters[context.characterId]?.name || 'Chat';
+        lorebookNameInput.val(`${characterName}_Lorebook`);
         // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
         createBtn.on('click', async function () {
-            const selectedChat = chatSelect.val();
             const lorebookName = lorebookNameInput.val().trim();
             const start = parseInt(startMessageInput.val(), 10) || 0;
             const end = endMessageInput.val() ? parseInt(endMessageInput.val(), 10) : null;
-            if (!selectedChat || !lorebookName) { statusMessage.text('Пожалуйста, выберите чат и введите имя лорбука.'); return; }
+            
+            if (!lorebookName) { 
+                statusMessage.text('Пожалуйста, введите имя лорбука.'); 
+                return; 
+            }
+            
             statusMessage.text('Обработка... Пожалуйста, подождите...');
             createBtn.prop('disabled', true);
+            
             try {
-                // Используем fetch и здесь для консистентности
-                const chatResponse = await fetch(`/api/chats/${selectedChat}`);
-                 if (!chatResponse.ok) {
-                    throw new Error(`Ошибка загрузки чата: ${chatResponse.statusText}`);
-                }
-                const chatContent = await chatResponse.text(); // .text(), так как чат - это не JSON, а набор строк
+                // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
+                // Формируем контент чата из getContext()
+                const userInfo = { user_name: context.user_name };
+                const messages = context.chat;
+                const chatContent = JSON.stringify(userInfo) + '\n' + messages.map(msg => JSON.stringify(msg)).join('\n');
+                // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+
                 const lorebookJson = generateLorebook(chatContent, start, end);
                 
-                // Для POST-запроса fetch также отлично подходит
                 const importResponse = await fetch('/api/worlds/import', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         filename: `${lorebookName}.json`,
                         data: JSON.stringify(lorebookJson) 
@@ -185,7 +152,6 @@ jQuery(async () => {
 
     function generateLorebook(chatContent, start, end) {
         try {
-            // Убедимся, что chatContent не пустой
             if (!chatContent || typeof chatContent !== 'string') {
                  throw new Error("Содержимое чата пустое или имеет неверный формат.");
             }
@@ -247,3 +213,4 @@ jQuery(async () => {
         subtree: true,
     });
 });
+
