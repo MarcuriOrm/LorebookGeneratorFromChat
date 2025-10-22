@@ -3,9 +3,10 @@
 jQuery(async () => {
     // This function ensures our code only runs when the page is fully ready.
 
-    // --- HTML-шаблон для нашего модального окна ---
-    const modalHtmlContent = `
+    // --- HTML-шаблон для ИНТЕРФЕЙСА ---
+    const popupHtmlContent = `
     <style>
+        /* CSS-переменные для нашей темы Найтвинга */
         :root {
             --nightwing-bg: #0a0e1a;
             --nightwing-blue: #00baf2;
@@ -15,7 +16,8 @@ jQuery(async () => {
             --glass-bg: rgba(26, 44, 64, 0.4);
             --glass-blur: backdrop-filter: blur(8px);
         }
-        .nightwing-modal-content {
+        /* Главный контейнер нашего интерфейса */
+        .nightwing-popup-content {
             background-color: var(--nightwing-bg);
             border: 1px solid var(--nightwing-blue);
             border-radius: 12px;
@@ -25,13 +27,10 @@ jQuery(async () => {
             padding: 2rem;
             animation: fadeIn 0.5s ease-in-out;
         }
-        #lorebook-generator-modal .modal-content {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-        }
+        /* Анимации */
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         @keyframes pulse { 0% { text-shadow: 0 0 5px var(--nightwing-glow); } 50% { text-shadow: 0 0 20px var(--nightwing-glow), 0 0 30px var(--nightwing-glow); } 100% { text-shadow: 0 0 5px var(--nightwing-glow); } }
+        /* Стили элементов формы */
         .nightwing-header { text-align: center; margin-bottom: 2rem; color: var(--nightwing-blue); font-size: 2rem; font-weight: bold; animation: pulse 3s infinite; }
         .nightwing-form .form-group { margin-bottom: 1.5rem; }
         .nightwing-form label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--nightwing-text); }
@@ -42,7 +41,7 @@ jQuery(async () => {
         .nightwing-btn:hover { background-color: var(--nightwing-blue); box-shadow: 0 0 20px var(--nightwing-glow); color: var(--nightwing-bg); }
         #status-message { text-align: center; margin-top: 1rem; height: 20px; color: var(--nightwing-blue); transition: opacity 0.3s; }
     </style>
-    <div class="nightwing-modal-content">
+    <div class="nightwing-popup-content">
         <h2 class="nightwing-header">Lorebook Generator</h2>
         <div class="nightwing-form">
             <div class="form-group"><label for="chat-select">Выберите чат:</label><select id="chat-select" class="form-control"></select></div>
@@ -58,17 +57,7 @@ jQuery(async () => {
 
     // --- Функции для работы расширения ---
 
-    function showGeneratorModal() {
-        const modalId = 'lorebook-generator-modal';
-        $('#' + modalId).remove();
-        const modal = $(`<div class="modal fade" id="${modalId}" tabindex="-1" role="dialog"><div class="modal-dialog modal-lg" role="document"><div class="modal-content">${modalHtmlContent}</div></div></div>`);
-        $('body').append(modal);
-        $('#' + modalId).modal('show');
-        $('#' + modalId).on('shown.bs.modal', () => initializeModalLogic());
-        $('#' + modalId).on('hidden.bs.modal', () => $(this).remove());
-    }
-
-    async function initializeModalLogic() {
+    async function initializePopupLogic() {
         const chatSelect = $('#chat-select');
         const lorebookNameInput = $('#lorebook-name');
         const startMessageInput = $('#start-message');
@@ -147,44 +136,33 @@ jQuery(async () => {
         return { uid: uid, key: [], comment: `Диалог. Сообщения #${firstMsgNumber}-${lastMsgNumber}`, content: content, enabled: true, order: 100, position: 'before_char', selective: true, constant: false, exclude_recursion: false, probability: 100 };
     }
 
-
-    // --- ТОЧКА ВХОДА: ПЛАН "ФАНТОМ-СТРАЖ" ---
-    function addMenuButton() {
-        // Проверяем, существует ли уже наша кнопка, чтобы не добавлять ее дважды
-        if ($('#lorebook-generator-menu-btn').length > 0) {
-            return;
-        }
-
-        // Проверяем, существует ли контейнер, в который мы хотим добавить кнопку
-        const menuContainer = $('#options .options-content');
-        if (menuContainer.length === 0) {
-            return; // Если контейнера нет, ничего не делаем
-        }
-        
-        // Создаем кнопку, которая выглядит как родной пункт меню
+    // --- ТОЧКА ВХОДА ---
+    function initializeMenuButton() {
         const menuButton = $(`<a id="lorebook-generator-menu-btn" class="interactable" tabindex="0"><i class="fa-lg fa-solid fa-book"></i><span>Lorebook Generator</span></a>`);
 
-        // Навешиваем обработчик клика
         menuButton.on('click', function (event) {
-            event.stopPropagation(); // Останавливаем всплытие события, чтобы меню не закрылось само
-            showGeneratorModal();
-            // Закрываем меню после клика
-             $('#options').removeClass('open');
+            event.stopPropagation();
+            // ИСПОЛЬЗУЕМ ОФИЦИАЛЬНУЮ ФУНКЦИЮ TAVERN
+            showPopup(popupHtmlContent, "t"); // "t" означает "transient" (временный)
+            // Инициализируем логику нашего окна сразу после его отображения
+            initializePopupLogic();
+            $('#options').removeClass('open');
         });
 
-        // Добавляем нашу кнопку в конец контейнера
-        menuContainer.append(menuButton);
-        console.log("Lorebook Generator: Страж добавил кнопку в меню #options.");
+        $('#options .options-content').append(menuButton);
     }
 
-    // Создаем кринж
+    // --- ура кринге ---
     const observer = new MutationObserver(function (mutations) {
-        // Каждый раз, когда что-то меняется на странице, мы пытаемся добавить нашу кнопку.
-        // Функция addMenuButton сама проверит, нужно ли это делать.
-        addMenuButton();
+        const menuContainer = document.querySelector('#options .options-content');
+        const button = document.getElementById('lorebook-generator-menu-btn');
+        // Если меню существует, а нашей кнопки в нем нет...
+        if (menuContainer && !button) {
+            // ...мы ее добавляем.
+            initializeMenuButton();
+        }
     });
 
-    // Запускаем кринж
     observer.observe(document.body, {
         childList: true,
         subtree: true,
