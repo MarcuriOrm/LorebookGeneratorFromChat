@@ -1,10 +1,9 @@
 // Lorebook Generator v1.0.0
-import { showPopup } from '../../../../script.js';
 
 jQuery(async () => {
     // Эта функция гарантирует, что наш код выполняется только тогда, когда страница полностью готова.
 
-    // --- HTML-шаблон для ИНТЕРФЕЙСА ---
+    // --- HTML-шаблон для нашего ИНТЕРФЕЙСА ---
     const popupHtmlContent = `
     <style>
         /* CSS-переменные для нашей темы Найтвинга */
@@ -67,7 +66,7 @@ jQuery(async () => {
         const createBtn = $('#create-lorebook-btn');
         const statusMessage = $('#status-message');
         try {
-            // Используем путь к API с ведущим слэшем.
+            // Используем правильный путь к API с ведущим слэшем.
             const response = await fetch('/api/chats');
             if (!response.ok) throw new Error(`Не удалось загрузить чаты (статус: ${response.status})`);
             
@@ -140,7 +139,7 @@ jQuery(async () => {
         return { uid: uid, key: [], comment: `Диалог. Сообщения #${firstMsgNumber}-${lastMsgNumber}`, content: content, enabled: true, order: 100, position: 'before_char', selective: true, constant: false, exclude_recursion: false, probability: 100 };
     }
 
-    // --- ТОЧКА ВХОДА: кринге ура ---
+    // --- ТОЧКА ВХОДА: "ФАНТОМ-СТРАЖ" ---
     function addMenuButton() {
         if ($('#lorebook-generator-menu-btn').length > 0) { return; }
         const menuContainer = $('#options .options-content');
@@ -148,7 +147,7 @@ jQuery(async () => {
         const menuButton = $(`<a id="lorebook-generator-menu-btn" class="interactable" tabindex="0"><i class="fa-lg fa-solid fa-book"></i><span>Lorebook Generator</span></a>`);
         menuButton.on('click', function (event) {
             event.stopPropagation();
-            // ИСПОЛЬЗУЕМ ОФИЦИАЛЬНУЮ ФУНКЦИЮ TAVERN
+            // ИСПОЛЬЗУЕМ ОФИЦИАЛЬНУЮ ФУНКЦИЮ TAVERN, которая теперь доступна глобально
             showPopup(popupHtmlContent, "html", null, { wide: true, large: true });
             // Инициализируем логику нашего окна сразу после его отображения
             initializePopupLogic();
