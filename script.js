@@ -3,7 +3,7 @@
 jQuery(async () => {
     // This function ensures our code only runs when the page is fully ready.
 
-    // --- HTML-шаблон для модального окна  ---
+    // --- HTML-шаблон для нашего модального окна ---
     const modalHtmlContent = `
     <style>
         :root {
@@ -88,7 +88,7 @@ jQuery(async () => {
         createBtn.on('click', async function () {
             const selectedChat = chatSelect.val();
             const lorebookName = lorebookNameInput.val().trim();
-            const start = parseInt(startMessage-input.val(), 10) || 0;
+            const start = parseInt(startMessageInput.val(), 10) || 0;
             const end = endMessageInput.val() ? parseInt(endMessageInput.val(), 10) : null;
             if (!selectedChat || !lorebookName) { statusMessage.text('Пожалуйста, выберите чат и введите имя лорбука.'); return; }
             statusMessage.text('Обработка... Пожалуйста, подождите...');
@@ -148,24 +148,46 @@ jQuery(async () => {
     }
 
 
-    // --- ТОЧКА ВХОДА ---
-    function initializeMenuButton() {
+    // --- ТОЧКА ВХОДА: ПЛАН "ФАНТОМ-СТРАЖ" ---
+    function addMenuButton() {
+        // Проверяем, существует ли уже наша кнопка, чтобы не добавлять ее дважды
+        if ($('#lorebook-generator-menu-btn').length > 0) {
+            return;
+        }
+
+        // Проверяем, существует ли контейнер, в который мы хотим добавить кнопку
+        const menuContainer = $('#options .options-content');
+        if (menuContainer.length === 0) {
+            return; // Если контейнера нет, ничего не делаем
+        }
+        
         // Создаем кнопку, которая выглядит как родной пункт меню
-        const menuButton = $(`<a class="interactable" tabindex="0"><i class="fa-lg fa-solid fa-book"></i><span>Lorebook Generator</span></a>`);
+        const menuButton = $(`<a id="lorebook-generator-menu-btn" class="interactable" tabindex="0"><i class="fa-lg fa-solid fa-book"></i><span>Lorebook Generator</span></a>`);
 
         // Навешиваем обработчик клика
-        menuButton.on('click', function () {
+        menuButton.on('click', function (event) {
+            event.stopPropagation(); // Останавливаем всплытие события, чтобы меню не закрылось само
             showGeneratorModal();
             // Закрываем меню после клика
              $('#options').removeClass('open');
         });
 
-        // Находим правильный контейнер внутри правильного меню и добавляем нашу кнопку
-        $('#options .options-content').append(menuButton);
-        console.log("Lorebook Generator: Кнопка успешно добавлена в меню #options.");
+        // Добавляем нашу кнопку в конец контейнера
+        menuContainer.append(menuButton);
+        console.log("Lorebook Generator: Страж добавил кнопку в меню #options.");
     }
 
-    // Запускаем нашу функцию, чтобы добавить кнопку.
-    initializeMenuButton();
+    // Создаем кринж
+    const observer = new MutationObserver(function (mutations) {
+        // Каждый раз, когда что-то меняется на странице, мы пытаемся добавить нашу кнопку.
+        // Функция addMenuButton сама проверит, нужно ли это делать.
+        addMenuButton();
+    });
+
+    // Запускаем кринж
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+    });
 });
 
