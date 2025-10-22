@@ -7,7 +7,7 @@ jQuery(async () => {
     // --- HTML-шаблон для нашего ИНТЕРФЕЙСА ---
     const popupHtmlContent = `
     <style>
-        /* ... (стили) ... */
+        /* ... (стили остаются без изменений) ... */
         :root {
             --nightwing-bg: #0a0e1a;
             --nightwing-blue: #00baf2;
@@ -120,9 +120,18 @@ jQuery(async () => {
 
                 const lorebookJson = generateLorebook(chatContent, start, end);
                 
+                // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
+                const token = $('#csrf_token').val(); // Получаем CSRF токен со страницы
+                // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+                
                 const importResponse = await fetch('/api/worlds/import', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': token // Добавляем токен в заголовки
+                    },
+                    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
                     body: JSON.stringify({
                         filename: `${lorebookName}.json`,
                         data: JSON.stringify(lorebookJson) 
