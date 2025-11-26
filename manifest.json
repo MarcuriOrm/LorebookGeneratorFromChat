@@ -1,6 +1,11 @@
 {
     "display_name": "Lorebook Generator",
+    "loading_order": 100,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "style.css",
     "author": "itsfantomas",
-    "version": "1.0.0",
-    "js": "script.js"
+    "version": "1.0.1",
+    "homePage": "https://github.com/itsfantomas/LorebookGeneratorFromChat"
 }
