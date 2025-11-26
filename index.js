@@ -2,7 +2,7 @@
 
 import { getContext } from "../../../extensions.js";
 
-const extensionName = "lorebook-generator";
+const extensionName = "LorebookGeneratorFromChat";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
 
 // --- Помощники ---
