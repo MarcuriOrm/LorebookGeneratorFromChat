@@ -1,0 +1,49 @@
+<div class="lorebook-generator-settings">
+    <div class="inline-drawer">
+        <div class="inline-drawer-toggle inline-drawer-header">
+            <b>Lorebook Generator</b>
+            <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+        </div>
+        
+        <div class="inline-drawer-content">
+            <div class="nightwing-style-container">
+                <p class="text-muted">Генерация векторной памяти из чата.</p>
+                
+                <!-- Название -->
+                <div class="form-group">
+                    <label for="lorebook_name_input">Название лорбука:</label>
+                    <input type="text" id="lorebook_name_input" class="text_pole" placeholder="Имя персонажа...">
+                </div>
+
+                <!-- Диапазон сообщений -->
+                <div class="form-group range-group" style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label for="lorebook_start_input">Начать с:</label>
+                        <input type="number" id="lorebook_start_input" class="text_pole" value="0" min="0" title="Номер первого сообщения">
+                    </div>
+                    <div style="flex: 1;">
+                        <label for="lorebook_end_input">Закончить на:</label>
+                        <input type="number" id="lorebook_end_input" class="text_pole" placeholder="Конец" title="Оставь пустым для конца чата">
+                    </div>
+                </div>
+
+                <!-- Глубина (оставим, раз ты просила, хотя при нарезке по юзеру она менее важна, но пусть будет для метаданных) -->
+                <div class="form-group">
+                     <label for="lorebook_depth_input"><small>Scan Depth (Глубина):</small></label>
+                     <input type="number" id="lorebook_depth_input" class="text_pole" value="10" min="1">
+                </div>
+
+                <!-- Кнопка -->
+                <button id="lorebook_create_btn" class="menu_button nightwing-btn">
+                    <i class="fa-solid fa-book-journal-whills"></i> Создать и Сохранить
+                </button>
+
+                <hr>
+                
+                <div id="lorebook_status_msg" class="status-box">
+                    Готово к работе.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
