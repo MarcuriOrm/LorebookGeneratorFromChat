@@ -22,7 +22,7 @@
 1. Откройте **SillyTavern**.  
 2. Перейдите в **Extensions** (Расширения) \-\> **Install Extension** (Установить).  
 3. Вставьте ссылку на репозиторий:  
-   \[https://github.com/itsfantomas/LorebookGeneratorFromChat\](https://github.com/itsfantomas/LorebookGeneratorFromChat)
+   https://github.com/itsfantomas/LorebookGeneratorFromChat
 
 4. Нажмите **Install** и обновите страницу.
 
