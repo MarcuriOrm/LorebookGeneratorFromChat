@@ -1,10 +1,11 @@
 # **Lorebook Generator (From Chat) for SillyTavern**
 
 **Transform your chat history into "smart" memory (Lorebook) with a single click.**  
-This extension automatically generates a World Info (Lorebook) file based on messages from your current chat. It's perfect for creating long-term character memory, summarizing events, or building a knowledge base.
+This extension automatically generates a World Info (Lorebook) file based on messages from your current chat. It's perfect for creating long-term character memory or building a knowledge base.
 
 ## **✨ Features**
 
+* **💸 No Token Cost:** Converts chat history directly into vector-ready chunks without requiring an LLM summarization call. Fast and free!
 * **⚡ Vector-Ready:** Creates entries with the Vectorized (🔗) flag enabled. This allows SillyTavern to perform semantic similarity searches, not just keyword matching.
 * **🧹 Smart Cleaning:** Automatically removes "noise" that can interfere with AI performance:
   * Strips out code blocks (\`\`\`...\`\`\`).
@@ -38,6 +39,7 @@ This extension automatically generates a World Info (Lorebook) file based on mes
 ## **⚠️ Important Notes**
 
 * **Vector Search:** For the lorebook to work effectively, ensure you have a Vectorization Source configured in your SillyTavern settings.
+* ℹ️ **Requires 'Extras' API or a local vector provider** enabled in SillyTavern settings to actually USE the search feature
 * **If Saving Fails:** Some server security settings might prevent the extension from creating files (a one-in-a-million chance, but still). In this case, the extension will **automatically download a .json file**. Simply import it manually via the World Info menu ("Import content").
 
 *Created with ❤️ for the SillyTavern community*
